@@ -1,5 +1,5 @@
 # fly.toml - Polymarket Dashboard
-app = "polymarket-dashboard"
+app = "volter-polymarket"
 primary_region = "iad"
 
 [build]
