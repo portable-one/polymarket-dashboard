@@ -22,24 +22,34 @@ function formatPct(price: string | number): string {
   return `${(p * 100).toFixed(1)}%`;
 }
 
-function getProbability(market: Market): number {
-  if (!market.outcomePrices?.length) return 0;
-  // For binary markets, first outcome = Yes
-  return parseFloat(market.outcomePrices[0]);
+function parsePrices(raw: string[] | string | undefined): string[] {
+  if (!raw) return [];
+  if (typeof raw === "string") {
+    try { return JSON.parse(raw); } catch { return []; }
+  }
+  return raw;
 }
 
-function getDeltaColor(delta: number): string {
-  if (delta > 0) return "text-green-400";
-  if (delta < 0) return "text-red-400";
-  return "text-gray-400";
+function parseOutcomes(raw: string[] | string | undefined): string[] {
+  if (!raw) return [];
+  if (typeof raw === "string") {
+    try { return JSON.parse(raw); } catch { return []; }
+  }
+  return raw;
+}
+
+function getProbability(market: Market): number {
+  const prices = parsePrices(market.outcomePrices as string[] | string | undefined);
+  if (!prices.length) return 0;
+  return parseFloat(prices[0]);
 }
 
 export default function MarketCard({ market, featured }: Props) {
   const [expanded, setExpanded] = useState(false);
   const prob = getProbability(market);
-  const isMultiOutcome = (market.outcomes?.length ?? 0) > 2;
-  const outcomes = market.outcomes || [];
-  const prices = (market.outcomePrices || []).map((p) => parseFloat(p));
+  const outcomes = parseOutcomes(market.outcomes as string[] | string | undefined);
+  const isMultiOutcome = outcomes.length > 2;
+  const prices = parsePrices(market.outcomePrices as string[] | string | undefined).map((p) => parseFloat(p));
 
   return (
     <div
