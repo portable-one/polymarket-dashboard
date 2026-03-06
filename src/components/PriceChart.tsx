@@ -171,7 +171,7 @@ export default function PriceChart({ conditionId, question }: Props) {
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data} margin={{ top: 4, right: 0, left: -20, bottom: 0 }}>
+            <AreaChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id={`grad-${conditionId.slice(2, 10)}`} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
@@ -187,11 +187,15 @@ export default function PriceChart({ conditionId, question }: Props) {
                 interval="preserveStartEnd"
               />
               <YAxis
-                tickFormatter={(v) => `${(v * 100).toFixed(0)}%`}
+                tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
                 tick={{ fontSize: 10, fill: "#6b7280" }}
                 tickLine={false}
                 axisLine={false}
-                domain={[0, 1]}
+                domain={([dataMin, dataMax]: [number, number]) => {
+                  const pad = Math.max((dataMax - dataMin) * 0.15, 0.02);
+                  return [Math.max(0, dataMin - pad), Math.min(1, dataMax + pad)];
+                }}
+                width={40}
               />
               <Tooltip
                 contentStyle={{
