@@ -39,7 +39,7 @@ function formatDelta(v: number | null) {
 }
 
 async function fetchChangeForCondition(
-  conditionId: string,
+  tokenId: string,
   secondsBack: number,
   fidelity: number
 ): Promise<number | null> {
@@ -47,7 +47,7 @@ async function fetchChangeForCondition(
   const startTs = now - secondsBack;
   try {
     const r = await fetch(
-      `/api/history?conditionId=${conditionId}&startTs=${startTs}&endTs=${now}&fidelity=${fidelity}`
+      `/api/history?conditionId=${tokenId}&startTs=${startTs}&endTs=${now}&fidelity=${fidelity}`
     );
     const pts: PricePoint[] = await r.json();
     if (!Array.isArray(pts) || pts.length < 2) return null;
@@ -96,10 +96,11 @@ export default function EventDashboard({ slug }: Props) {
       setLoadingChanges(true);
       const updatedRows = await Promise.all(
         initialRows.map(async (row) => {
-          if (!row.market.conditionId) return row;
+          const tokenId = row.market.clobTokenIds?.[0];
+          if (!tokenId) return row;
           const [c1h, c24h] = await Promise.all([
-            fetchChangeForCondition(row.market.conditionId, 3600, 1),
-            fetchChangeForCondition(row.market.conditionId, 86400, 10),
+            fetchChangeForCondition(tokenId, 3600, 1),
+            fetchChangeForCondition(tokenId, 86400, 10),
           ]);
           return { ...row, change1h: c1h, change24h: c24h };
         })
@@ -238,10 +239,10 @@ export default function EventDashboard({ slug }: Props) {
       </div>
 
       {/* Chart */}
-      {selectedMarket && selectedMarket.conditionId && (
+      {selectedMarket && selectedMarket.clobTokenIds?.[0] && (
         <div className="rounded-xl border border-blue-500/30 bg-blue-950/10">
           <PriceChart
-            conditionId={selectedMarket.conditionId}
+            conditionId={selectedMarket.clobTokenIds[0]}
             question={selectedMarket.question}
           />
         </div>
