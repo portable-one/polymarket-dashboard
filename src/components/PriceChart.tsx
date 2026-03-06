@@ -191,9 +191,9 @@ export default function PriceChart({ conditionId, question }: Props) {
                 tick={{ fontSize: 10, fill: "#6b7280" }}
                 tickLine={false}
                 axisLine={false}
-                domain={([dataMin, dataMax]: [number, number]) => {
+                domain={([dataMin, dataMax]: readonly [number, number]) => {
                   const pad = Math.max((dataMax - dataMin) * 0.15, 0.02);
-                  return [Math.max(0, dataMin - pad), Math.min(1, dataMax + pad)];
+                  return [Math.max(0, dataMin - pad), Math.min(1, dataMax + pad)] as [number, number];
                 }}
                 width={40}
               />
