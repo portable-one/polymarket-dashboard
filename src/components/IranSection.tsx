@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Event, Market } from "@/lib/polymarket";
 import PriceChart from "./PriceChart";
 import MarketCard from "./MarketCard";
@@ -53,6 +53,19 @@ export default function IranSection() {
   }, []);
 
   const selected = CONFLICT_MARKETS[selectedIdx];
+
+  // Build conditionId -> clobTokenId lookup from fetched events
+  const tokenLookup = useMemo(() => {
+    const map: Record<string, string> = {};
+    events.flatMap((e) => e.markets || []).forEach((m) => {
+      if (m.conditionId && m.clobTokenIds?.[0]) {
+        map[m.conditionId] = m.clobTokenIds[0];
+      }
+    });
+    return map;
+  }, [events]);
+
+  const selectedTokenId = tokenLookup[selected.conditionId];
 
   // Extra related markets from events
   const relatedMarkets: Market[] = events
@@ -107,12 +120,14 @@ export default function IranSection() {
       </div>
 
       {/* Price Chart for selected sub-market */}
-      <div className="rounded-xl border border-blue-500/30 bg-blue-950/10 mb-6">
-        <PriceChart
-          conditionId={selected.conditionId}
-          question={`Conflict ends ${selected.label} — Yes probability`}
-        />
-      </div>
+      {selectedTokenId && (
+        <div className="rounded-xl border border-blue-500/30 bg-blue-950/10 mb-6">
+          <PriceChart
+            conditionId={selectedTokenId}
+            question={`Conflict ends ${selected.label} — Yes probability`}
+          />
+        </div>
+      )}
 
       {/* Related Iran events */}
       {!loadingEvents && relatedMarkets.length > 0 && (

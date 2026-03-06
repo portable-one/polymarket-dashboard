@@ -116,13 +116,13 @@ export default function MarketCard({ market, featured }: Props) {
         )}
       </div>
 
-      {expanded && market.conditionId && (
+      {expanded && market.clobTokenIds?.[0] && (
         <div
           className="border-t border-white/10"
           onClick={(e) => e.stopPropagation()}
         >
           <PriceChart
-            conditionId={market.conditionId}
+            conditionId={market.clobTokenIds[0]}
             question={market.question}
           />
         </div>
