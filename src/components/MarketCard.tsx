@@ -38,6 +38,14 @@ function parseOutcomes(raw: string[] | string | undefined): string[] {
   return raw;
 }
 
+function parseTokenIds(raw: string[] | string | undefined): string[] {
+  if (!raw) return [];
+  if (typeof raw === "string") {
+    try { return JSON.parse(raw); } catch { return []; }
+  }
+  return raw;
+}
+
 function getProbability(market: Market): number {
   const prices = parsePrices(market.outcomePrices as string[] | string | undefined);
   if (!prices.length) return 0;
@@ -116,13 +124,13 @@ export default function MarketCard({ market, featured }: Props) {
         )}
       </div>
 
-      {expanded && market.clobTokenIds?.[0] && (
+      {expanded && parseTokenIds(market.clobTokenIds as string[] | string | undefined)[0] && (
         <div
           className="border-t border-white/10"
           onClick={(e) => e.stopPropagation()}
         >
           <PriceChart
-            conditionId={market.clobTokenIds[0]}
+            conditionId={parseTokenIds(market.clobTokenIds as string[] | string | undefined)[0]}
             question={market.question}
           />
         </div>

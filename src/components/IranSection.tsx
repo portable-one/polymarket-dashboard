@@ -2,6 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Event, Market } from "@/lib/polymarket";
+
+function parseTokenIds(raw: string[] | string | undefined): string[] {
+  if (!raw) return [];
+  if (typeof raw === "string") { try { return JSON.parse(raw); } catch { return []; } }
+  return raw;
+}
 import PriceChart from "./PriceChart";
 import MarketCard from "./MarketCard";
 
@@ -58,8 +64,9 @@ export default function IranSection() {
   const tokenLookup = useMemo(() => {
     const map: Record<string, string> = {};
     events.flatMap((e) => e.markets || []).forEach((m) => {
-      if (m.conditionId && m.clobTokenIds?.[0]) {
-        map[m.conditionId] = m.clobTokenIds[0];
+      const tokenIds = parseTokenIds(m.clobTokenIds as string[] | string | undefined);
+      if (m.conditionId && tokenIds[0]) {
+        map[m.conditionId] = tokenIds[0];
       }
     });
     return map;

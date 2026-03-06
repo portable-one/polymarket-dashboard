@@ -27,6 +27,12 @@ function parseOutcomes(raw: string[] | string | undefined): string[] {
   return raw;
 }
 
+function parseTokenIds(raw: string[] | string | undefined): string[] {
+  if (!raw) return [];
+  if (typeof raw === "string") { try { return JSON.parse(raw); } catch { return []; } }
+  return raw;
+}
+
 function formatPct(v: number) {
   return `${(v * 100).toFixed(1)}%`;
 }
@@ -96,7 +102,7 @@ export default function EventDashboard({ slug }: Props) {
       setLoadingChanges(true);
       const updatedRows = await Promise.all(
         initialRows.map(async (row) => {
-          const tokenId = row.market.clobTokenIds?.[0];
+          const tokenId = parseTokenIds(row.market.clobTokenIds as string[] | string | undefined)[0];
           if (!tokenId) return row;
           const [c1h, c24h] = await Promise.all([
             fetchChangeForCondition(tokenId, 3600, 1),
@@ -239,10 +245,10 @@ export default function EventDashboard({ slug }: Props) {
       </div>
 
       {/* Chart */}
-      {selectedMarket && selectedMarket.clobTokenIds?.[0] && (
+      {selectedMarket && parseTokenIds(selectedMarket.clobTokenIds as string[] | string | undefined)[0] && (
         <div className="rounded-xl border border-blue-500/30 bg-blue-950/10">
           <PriceChart
-            conditionId={selectedMarket.clobTokenIds[0]}
+            conditionId={parseTokenIds(selectedMarket.clobTokenIds as string[] | string | undefined)[0]}
             question={selectedMarket.question}
           />
         </div>

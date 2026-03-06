@@ -26,7 +26,7 @@ const RANGES: { label: string; value: Range; seconds: number; fidelity: number }
   { label: "24H", value: "24h", seconds: 24 * 3600, fidelity: 10 },
   { label: "7D", value: "7d", seconds: 7 * 24 * 3600, fidelity: 60 },
   { label: "30D", value: "30d", seconds: 30 * 24 * 3600, fidelity: 360 },
-  { label: "All", value: "all", seconds: 0, fidelity: 1440 },
+  { label: "All", value: "all", seconds: 365 * 24 * 3600, fidelity: 1440 },
 ];
 
 function formatTs(ts: number, range: Range): string {
@@ -58,7 +58,7 @@ export default function PriceChart({ conditionId, question }: Props) {
 
     const now = Math.floor(Date.now() / 1000);
     const rangeCfg = RANGES.find((r) => r.value === range)!;
-    const startTs = rangeCfg.seconds === 0 ? 0 : now - rangeCfg.seconds;
+    const startTs = now - rangeCfg.seconds;
 
     fetch(
       `/api/history?conditionId=${conditionId}&startTs=${startTs}&endTs=${now}&fidelity=${rangeCfg.fidelity}`

@@ -79,17 +79,45 @@ export async function fetchEventsByTag(tag: string, limit = 10): Promise<Event[]
   return res.json();
 }
 
+// CLOB API has a hard limit of ~15 days per request.
+// For longer ranges, we chunk into 14-day windows and stitch results.
+const MAX_INTERVAL = 14 * 24 * 3600; // 14 days in seconds
+
+async function fetchPriceHistoryChunk(
+  market: string,
+  startTs: number,
+  endTs: number,
+  fidelity: number
+): Promise<PricePoint[]> {
+  const url = `${CLOB_API}/prices-history?market=${market}&startTs=${startTs}&endTs=${endTs}&fidelity=${fidelity}`;
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error(`CLOB API error: ${res.status}`);
+  const data: PriceHistory = await res.json();
+  return data.history || [];
+}
+
 export async function fetchPriceHistory(
-  conditionId: string,
+  market: string,
   startTs: number,
   endTs: number,
   fidelity = 60
 ): Promise<PricePoint[]> {
-  const url = `${CLOB_API}/prices-history?market=${conditionId}&startTs=${startTs}&endTs=${endTs}&fidelity=${fidelity}`;
-  const res = await fetch(url, { next: { revalidate: 60 } });
-  if (!res.ok) throw new Error(`CLOB API error: ${res.status}`);
-  const data: PriceHistory = await res.json();
-  return data.history || [];
+  const interval = endTs - startTs;
+  if (interval <= MAX_INTERVAL) {
+    return fetchPriceHistoryChunk(market, startTs, endTs, fidelity);
+  }
+
+  // Chunk into MAX_INTERVAL windows
+  const chunks: Promise<PricePoint[]>[] = [];
+  let chunkStart = startTs;
+  while (chunkStart < endTs) {
+    const chunkEnd = Math.min(chunkStart + MAX_INTERVAL, endTs);
+    chunks.push(fetchPriceHistoryChunk(market, chunkStart, chunkEnd, fidelity));
+    chunkStart = chunkEnd;
+  }
+
+  const results = await Promise.all(chunks);
+  return results.flat().sort((a, b) => a.t - b.t);
 }
 
 export async function fetchMarketById(id: string): Promise<Market> {
